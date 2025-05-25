@@ -1,25 +1,18 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🔮 Мистическое колесо фортуны 🔮</title>
+    <title>Mystical Wheel of Fortune</title>
     <style>
-        /* То же самое, но переведены только тексты и, при желании, переименованы CSS-переменные */
-        :root {
-            --gold: #ffd700;
-            --light-gold: #ffed4e;
-            --dark-bg1: #1a1a2e;
-            --dark-bg2: #16213e;
-            --dark-bg3: #0f3460;
-        }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
+
         body {
-            background: linear-gradient(135deg, var(--dark-bg1), var(--dark-bg2), var(--dark-bg3));
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
             color: #fff;
             font-family: 'Georgia', serif;
             min-height: 100vh;
@@ -29,79 +22,249 @@
             justify-content: center;
             overflow-x: hidden;
         }
-        .mystical-bg { /* … без изменений … */ }
-        .star { /* … без изменений … */ }
-        @keyframes twinkle { /* … без изменений … */ }
+
+        .mystical-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
 
         .container {
             text-align: center;
             max-width: 800px;
             padding: 20px;
         }
+
         h1 {
             font-size: 2.5rem;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            background: linear-gradient(45deg, var(--gold), var(--light-gold), var(--gold));
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
         .question {
             font-size: 1.3rem;
             margin-bottom: 30px;
             color: #e6e6fa;
             font-style: italic;
         }
-        .wheel-container { /* … без изменений … */ }
-        .wheel { /* … без изменений, можно подправить переменные */ }
-        .wheel-segments { /* … */ }
-        .segment-text { /* … */ }
-        .pointer { /* … */ }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto 30px;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            background: conic-gradient(
+                #ff6b6b 0deg 45deg,
+                #4ecdc4 45deg 90deg,
+                #45b7d1 90deg 135deg,
+                #96ceb4 135deg 180deg,
+                #feca57 180deg 225deg,
+                #ff9ff3 225deg 270deg,
+                #54a0ff 270deg 315deg,
+                #5f27cd 315deg 360deg
+            );
+            border: 8px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            transition: transform 4s cubic-bezier(0.23, 1, 0.320, 1);
+        }
+
+        .wheel-segments {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+        }
+
+        .segment-text {
+            position: absolute;
+            width: 50%;
+            height: 2px;
+            left: 50%;
+            top: 50%;
+            transform-origin: 0 0;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #000;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+            padding-left: 20px;
+            line-height: 2;
+            white-space: nowrap;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ffd700;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,0.3));
+            z-index: 10;
+        }
+
         .center-button {
-            /* То же, но изменён текст кнопки через JS */
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #ffd700, #ffed4e);
+            border: 4px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1a1a2e;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+            z-index: 10;
         }
+
+        .center-button:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .center-button:active {
+            transform: translate(-50%, -50%) scale(0.95);
+        }
+
         .prediction {
-            /* … без изменений … */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 20px;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
         }
-        .prediction.show { /* … */ }
+
+        .prediction.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
         .prediction h3 {
-            color: var(--gold);
+            color: #ffd700;
             font-size: 1.5rem;
             margin-bottom: 15px;
         }
-        .prediction p { /* … */ }
-        .crystal-ball { /* … */ }
-        @keyframes float { /* … */ }
-        .spinning { /* … */ }
-        @media (max-width: 600px) { /* … */ }
+
+        .prediction p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #e6e6fa;
+        }
+
+        .crystal-ball {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.2), transparent 70%);
+            border-radius: 50%;
+            margin: 20px auto;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .spinning {
+            pointer-events: none;
+        }
+
+        @media (max-width: 600px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .question {
+                font-size: 1.1rem;
+            }
+            
+            .segment-text {
+                font-size: 0.7rem;
+                padding-left: 15px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="mystical-bg" id="stars"></div>
+    
     <div class="container">
-        <h1>🔮 Мистическое колесо фортуны 🔮</h1>
-        <div class="question">«Выпустим ли мы релиз вовремя?»</div>
+        <h1>🔮 Mystical Wheel of Fortune 🔮</h1>
+        <div class="question">"Зарелизим ли мы все вовремя?"</div>
+        
         <div class="crystal-ball"></div>
+        
         <div class="wheel-container">
-            <div class="pointer" aria-hidden="true"></div>
-            <div class="wheel" id="wheel" role="img" aria-label="Колесо фортуны">
+            <div class="pointer"></div>
+            <div class="wheel" id="wheel">
                 <div class="wheel-segments">
-                    <div class="segment-text" style="transform: rotate(22.5deg);">Меркурий в ретрограде</div>
-                    <div class="segment-text" style="transform: rotate(67.5deg);">Поломка кофемашины</div>
-                    <div class="segment-text" style="transform: rotate(112.5deg);">Фича в последний момент</div>
-                    <div class="segment-text" style="transform: rotate(157.5deg);">Пропало интернет-соединение</div>
-                    <div class="segment-text" style="transform: rotate(202.5deg);">Монстр «Scope Creep»</div>
-                    <div class="segment-text" style="transform: rotate(247.5deg);">Появление «Гидры багов»</div>
-                    <div class="segment-text" style="transform: rotate(292.5deg);">Проклятие перфекционизма</div>
-                    <div class="segment-text" style="transform: rotate(337.5deg);">Внезапное совещание</div>
+                    <div class="segment-text" style="transform: rotate(22.5deg);">🌚</div>
+                    <div class="segment-text" style="transform: rotate(67.5deg);">🌝</div>
+                    <div class="segment-text" style="transform: rotate(112.5deg);">🌚</div>
+                    <div class="segment-text" style="transform: rotate(157.5deg);">🌝</div>
+                    <div class="segment-text" style="transform: rotate(202.5deg);">🌚</div>
+                    <div class="segment-text" style="transform: rotate(247.5deg);">🌝</div>
+                    <div class="segment-text" style="transform: rotate(292.5deg);">🌚</div>
+                    <div class="segment-text" style="transform: rotate(337.5deg);">🌝</div>
                 </div>
             </div>
-            <button class="center-button" id="spinBtn" aria-label="Крутить колесо">КРУТИТЬ</button>
+            <button class="center-button" id="spinBtn">ТЫК</button>
         </div>
-        <div class="prediction" id="prediction" aria-live="polite">
-            <h3>🔮 Хрустальный шар говорит...</h3>
-            <p>Нажмите золотую кнопку, чтобы узнать, какие мистические силы могут помешать вашему дедлайну!</p>
+        
+        <div class="prediction" id="prediction">
+            <h3>🔮 Хрустальный шар приоткроет завесу будщего...</h3>
+            <p>Щелкни по золотой кнопке, чтобы колесо фортуны предсказало будущее твоих дедлайнов!</p>
         </div>
     </div>
 
@@ -109,53 +272,53 @@
         const wheel = document.getElementById('wheel');
         const spinBtn = document.getElementById('spinBtn');
         const prediction = document.getElementById('prediction');
-
+        
+        // Create twinkling stars
         function createStars() {
             const starsContainer = document.getElementById('stars');
             for (let i = 0; i < 100; i++) {
                 const star = document.createElement('div');
                 star.className = 'star';
-                star.style.left = `${Math.random() * 100}%`;
-                star.style.top = `${Math.random() * 100}%`;
-                const size = Math.random() * 3 + 1;
-                star.style.width = star.style.height = `${size}px`;
-                star.style.animationDelay = `${Math.random() * 3}s`;
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.width = star.style.height = Math.random() * 3 + 1 + 'px';
+                star.style.animationDelay = Math.random() * 3 + 's';
                 starsContainer.appendChild(star);
             }
         }
-
+        
         const predictions = [
             {
-                title: "Меркурий в ретрограде! ☿️",
-                text: "Космический шалун устроил ретроград, и все ваши письма бесследно исчезают, а система контроля версий превращает код в спагетти. Подождите, пока Меркурий не пойдёт прямым ходом... или обзаведитесь надёжным бэкапом."
+                title: "Ретроградный Меркурий наносит удар! ☿️",
+                text: "Космический трикстер перевернет все с ног на голову: теперь в каждом треде с командой будет по 100 сообщений, код откажется компилиться и кофемашина прикажет долго жить. Отложите релиз или хотя бы убедитесь, что у вас сохранен последний бэкап базы."
             },
             {
-                title: "Апокалипсис кофемашины ☕",
-                text: "Говорят, наступит день, когда кофемашина в офисе сломается, и разработчики будут функционировать на 10% от привычной производительности. Суета, галлюцинации от недостатка кофеина и экстренные рейды за латте во все ближайшие кофейни."
+                title: "Успешный успех! ☕",
+                text: "Фортуна на вашей стороне — но не зазнавайтесь. Силы зла не дремлют, и стоит ослабить бдительность, как они атакуют вас из-за спины."
             },
             {
-                title: "Фея срочных фич 🧚‍♀️",
-                text: "Эта проказница шёпчет в уши стейкхолдеров «ещё одну мелкую фичу», и в итоге «добавить кнопочку» перерастает в полную перестройку архитектуры. Фея хихикает, а вы рефакторите."
+                title: "Вас посетит фея перемен 🧚‍♀️",
+                text: "Эта хулиганка нашептывает 'это маленькая фича, давай добавим?' в уши стрейкхолдеров в самый последний момент. То, что началось с добавления кнопки, превратится в переделку всей системы."
             },
             {
-                title: "Интернет исчезает в эфире 🌐",
-                text: "Боги цифровых миров решили, что ваш Wi-Fi слишком слаб. Облачные сервисы становятся недоступны, и команда три дня осваивает работу в оффлайне."
+                title: "Интернет перестанет работать прямо в момент релиза. А впрочем, не впервой 🌐",
+                text: "Цифровые боги решили, что вам нужно вернуться к истокам, писать код в блокноте и запускать локально."
             },
             {
-                title: "Пробуждение монстра «Scope Creep» 👹",
-                text: "Это легендарное чудовище питается вашими требованиями: каждое «ещё чуть-чуть» даёт ему новую голову. Простая фича превращается в многоголовую гидру сложности."
+                title: "Пробудится монстр, питающийся требованиями 👹",
+                text: "Этот зверь из легенд кормится раздутыми требованиями и становится все больше с каждым маленьким изменением. Вскоре он пожрет вас вместе с командой."
             },
             {
-                title: "Возрождение Гидры багов 🐛",
-                text: "Вы фиксируете одну ошибку — две новых вырастают на её месте! Эта гидра бессмертна к юнит-тестам и наслаждается вашими бессонными ночами за дебагом."
+                title: "На вашем пути баг-гидра 🐛",
+                text: "На каждый баг, который вы пофиксите, вылезет десять новых. У монстра иммунитет к юнит-тестам и он жрет тестировщиков на завтрак."
             },
             {
-                title: "Проклятие перфекционизма ✨",
-                text: "Сильнейшее заклинание, заставляющее рефакторить код «ещё чуточку» и сдвигать пиксели, пока вселенная не исчерпает своё тепло. Голос внутри шепчет: «А может, ещё на 0,5% лучше?»"
+                title: "На вас падет проклятие перфекционизма ✨",
+                text: "Удивительно мощное проклятие, которое побуждает разработчиков к рефакторингу, а дизайнеров — к пиксель-перфект ревью."
             },
             {
-                title: "Ритуал внезапных совещаний 📅",
-                text: "Древний корпоративный обряд, порождающий срочные митинги из ниоткуда. Каждый утрачивает по 30 минут продуктивного времени, и дедлайны становятся математической абстракцией."
+                title: "Вы попадете в петлю бесконечных встреч 📅",
+                text: "Срочные встречи появятся из ниоткуда и забьют календарь всей команды, оставив не больше 30 минут в день на продуктивную работу."
             }
         ];
 
@@ -164,34 +327,39 @@
 
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
+            
             isSpinning = true;
-            spinBtn.disabled = true;
+            spinBtn.style.pointerEvents = 'none';
             wheel.classList.add('spinning');
-
+            
+            // Random spin: 3-5 full rotations plus random segment
             const spins = 3 + Math.random() * 2;
             const randomSegment = Math.random() * 360;
-            const totalRotation = currentRotation + spins * 360 + randomSegment;
-
+            const totalRotation = currentRotation + (spins * 360) + randomSegment;
+            
             wheel.style.transform = `rotate(${totalRotation}deg)`;
             currentRotation = totalRotation % 360;
-
-            const normalized = (360 - (currentRotation % 360)) % 360;
-            const segmentIndex = Math.floor(normalized / 45);
-
+            
+            // Determine which segment we landed on
+            const normalizedRotation = (360 - (currentRotation % 360)) % 360;
+            const segmentIndex = Math.floor(normalizedRotation / 45);
+            
             setTimeout(() => {
                 isSpinning = false;
-                spinBtn.disabled = false;
+                spinBtn.style.pointerEvents = 'auto';
                 wheel.classList.remove('spinning');
-
-                const sel = predictions[segmentIndex];
+                
+                // Show prediction
+                const selectedPrediction = predictions[segmentIndex];
                 prediction.innerHTML = `
-                    <h3>${sel.title}</h3>
-                    <p>${sel.text}</p>
+                    <h3>${selectedPrediction.title}</h3>
+                    <p>${selectedPrediction.text}</p>
                 `;
                 prediction.classList.add('show');
             }, 4000);
         });
 
+        // Initialize
         createStars();
     </script>
 </body>
