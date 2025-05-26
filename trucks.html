@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Truck Load Runner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .game-header {
+            margin-bottom: 20px;
+        }
+
+        .game-header h1 {
+            font-size: 2.5em;
+            color: #f39c12;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 2px solid #3498db;
+        }
+
+        #gameCanvas {
+            border: 3px solid #f39c12;
+            border-radius: 10px;
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1.1em;
+            color: #bdc3c7;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(231, 76, 60, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+        }
+
+        .game-over h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .restart-btn {
+            background: #f39c12;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .restart-btn:hover {
+            background: #e67e22;
+            transform: scale(1.1);
+        }
+
+        .warning {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        .level-up {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(46, 204, 113, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 50;
+            animation: levelUpPulse 2s ease-out;
+        }
+
+        @keyframes levelUpPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>🚛 Truck Load Runner</h1>
+            <div class="stats">
+                <div class="stat">💰 Money: $<span id="money">0</span></div>
+                <div class="stat">📦 Loads: <span id="loads">0</span></div>
+                <div class="stat">⏱️ Time: <span id="time">0</span>s</div>
+                <div class="stat">🎯 Level: <span id="level">1</span></div>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div class="controls">
+            Use ARROW KEYS or WASD to move your truck
+            <div id="policeWarning" class="warning" style="display: none;">
+                🚨 CARS INCOMING! Avoid them or lose money! Make them crash for bonus! 🚨
+            </div>
+        </div>
+
+        <div id="gameOver" class="game-over">
+            <h2>Game Over!</h2>
+            <p>You went bankrupt!</p>
+            <p>Final Score: $<span id="finalMoney">0</span></p>
+            <p>Reached Level: <span id="finalLevel">1</span></p>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
+        </div>
+
+        <div id="levelUp" class="level-up">
+            <h2>🎉 LEVEL UP! 🎉</h2>
+            <p>Level <span id="newLevel">2</span></p>
+            <p>Speed increased! More obstacles!</p>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Game state
+        let gameRunning = true;
+        let money = 0;
+        let loadsCollected = 0;
+        let gameTime = 0;
+        let policeSpawned = false;
+        let currentLevel = 1;
+        let baseSpeed = 3;
+        let baseCarSpeed = 1.5;
+        
+        // Game objects
+        const truck = {
+            x: 50,
+            y: 200,
+            width: 40,
+            height: 25,
+            speed: baseSpeed,
+            dx: 0,
+            dy: 0
+        };
+        
+        const loads = [];
+        const police = [];
+        const explosions = [];
+        const obstacles = [];
+        
+        // Game timers
+        let lastTime = 0;
+        let loadSpawnTimer = 0;
+        let policeSpawnTimer = 0;
+        let gameTimer = 0;
+        
+        // Input handling
+        const keys = {};
+        
+        document.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+        
+        // Spawn load
+        function spawnLoad() {
+            loads.push({
+                x: Math.random() * (canvas.width - 20),
+                y: Math.random() * (canvas.height - 20),
+                width: 20,
+                height: 20,
+                value: Math.floor(Math.random() * 50) + 25
+            });
+        }
+        
+        // Spawn obstacle
+        function spawnObstacle() {
+            obstacles.push({
+                x: Math.random() * (canvas.width - 30),
+                y: Math.random() * (canvas.height - 30),
+                width: 30,
+                height: 30,
+                type: Math.random() < 0.5 ? 'rock' : 'tree'
+            });
+        }
+        
+        // Update level based on money
+        function updateLevel() {
+            const newLevel = Math.floor(money / 1000) + 1;
+            if (newLevel > currentLevel) {
+                currentLevel = newLevel;
+                
+                // Increase speeds
+                const speedMultiplier = 1 + (currentLevel - 1) * 0.3;
+                truck.speed = baseSpeed * speedMultiplier;
+                
+                // Update car speeds
+                police.forEach(car => {
+                    car.speed = baseCarSpeed * speedMultiplier;
+                });
+                
+                // Show level up notification
+                showLevelUp();
+                
+                // Add more obstacles for higher levels
+                const obstaclesToAdd = Math.min(currentLevel - 1, 8); // Max 8 obstacles
+                for (let i = 0; i < obstaclesToAdd; i++) {
+                    spawnObstacle();
+                }
+            }
+        }
+        
+        // Show level up notification
+        function showLevelUp() {
+            document.getElementById('newLevel').textContent = currentLevel;
+            document.getElementById('levelUp').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('levelUp').style.display = 'none';
+            }, 2000);
+        }
+        // Spawn police car
+        function spawnPoliceCar() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+            
+            switch(side) {
+                case 0: x = 0; y = Math.random() * canvas.height; break;
+                case 1: x = canvas.width; y = Math.random() * canvas.height; break;
+                case 2: x = Math.random() * canvas.width; y = 0; break;
+                case 3: x = Math.random() * canvas.width; y = canvas.height; break;
+            }
+            
+            const speedMultiplier = 1 + (currentLevel - 1) * 0.3;
+            
+            police.push({
+                x: x,
+                y: y,
+                width: 30,
+                height: 20,
+                speed: baseCarSpeed * speedMultiplier,
+                fine: Math.floor(Math.random() * 100) + 50
+            });
+        }
+        
+        // Update truck position
+        function updateTruck() {
+            truck.dx = 0;
+            truck.dy = 0;
+            
+            if (keys['arrowleft'] || keys['a']) truck.dx = -truck.speed;
+            if (keys['arrowright'] || keys['d']) truck.dx = truck.speed;
+            if (keys['arrowup'] || keys['w']) truck.dy = -truck.speed;
+            if (keys['arrowdown'] || keys['s']) truck.dy = truck.speed;
+            
+            truck.x += truck.dx;
+            truck.y += truck.dy;
+            
+            // Keep truck in bounds
+            truck.x = Math.max(0, Math.min(canvas.width - truck.width, truck.x));
+            truck.y = Math.max(0, Math.min(canvas.height - truck.height, truck.y));
+        }
+        
+        // Update police cars
+        function updatePoliceCars() {
+            police.forEach(car => {
+                // Simple AI: move toward truck
+                const dx = truck.x - car.x;
+                const dy = truck.y - car.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    car.x += (dx / distance) * car.speed;
+                    car.y += (dy / distance) * car.speed;
+                }
+            });
+        }
+        
+        // Create explosion effect
+        function createExplosion(x, y) {
+            explosions.push({
+                x: x,
+                y: y,
+                particles: Array.from({length: 8}, () => ({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 8,
+                    vy: (Math.random() - 0.5) * 8,
+                    life: 30,
+                    maxLife: 30
+                }))
+            });
+        }
+        
+        // Update explosions
+        function updateExplosions() {
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                const explosion = explosions[i];
+                let particlesAlive = false;
+                
+                explosion.particles.forEach(particle => {
+                    if (particle.life > 0) {
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vx *= 0.95; // Friction
+                        particle.vy *= 0.95;
+                        particle.life--;
+                        particlesAlive = true;
+                    }
+                });
+                
+                if (!particlesAlive) {
+                    explosions.splice(i, 1);
+                }
+            }
+        }
+        
+        // Draw obstacles
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                ctx.font = '25px Arial';
+                ctx.textAlign = 'center';
+                
+                if (obstacle.type === 'rock') {
+                    ctx.fillText('🪨', obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2 + 8);
+                } else {
+                    ctx.fillText('🌳', obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2 + 8);
+                }
+            });
+        }
+        // Draw explosions
+        function drawExplosions() {
+            explosions.forEach(explosion => {
+                explosion.particles.forEach(particle => {
+                    if (particle.life > 0) {
+                        const alpha = particle.life / particle.maxLife;
+                        const size = 8 * alpha;
+                        
+                        ctx.font = `${size + 10}px Arial`;
+                        ctx.textAlign = 'center';
+                        ctx.globalAlpha = alpha;
+                        
+                        // Random explosion emoji
+                        const explosionEmojis = ['💥', '🔥', '⭐'];
+                        const emoji = explosionEmojis[Math.floor(Math.random() * explosionEmojis.length)];
+                        ctx.fillText(emoji, particle.x, particle.y);
+                        
+                        ctx.globalAlpha = 1;
+                    }
+                });
+            });
+        }
+        
+        // Check collisions
+        function checkCollisions() {
+            // Check load collisions
+            for (let i = loads.length - 1; i >= 0; i--) {
+                const load = loads[i];
+                if (truck.x < load.x + load.width &&
+                    truck.x + truck.width > load.x &&
+                    truck.y < load.y + load.height &&
+                    truck.y + truck.height > load.y) {
+                    
+                    money += load.value;
+                    loadsCollected++;
+                    loads.splice(i, 1);
+                    
+                    // Check for level up
+                    updateLevel();
+                }
+            }
+            
+            // Check obstacle collisions
+            obstacles.forEach(obstacle => {
+                if (truck.x < obstacle.x + obstacle.width &&
+                    truck.x + truck.width > obstacle.x &&
+                    truck.y < obstacle.y + obstacle.height &&
+                    truck.y + truck.height > obstacle.y) {
+                    
+                    // Bounce back effect
+                    truck.x -= truck.dx * 2;
+                    truck.y -= truck.dy * 2;
+                    
+                    // Small penalty
+                    money -= 10;
+                    if (money < 0) {
+                        gameOver();
+                        return;
+                    }
+                }
+            });
+            
+            // Check car collisions with truck
+            for (let i = police.length - 1; i >= 0; i--) {
+                const car = police[i];
+                if (truck.x < car.x + car.width &&
+                    truck.x + truck.width > car.x &&
+                    truck.y < car.y + car.height &&
+                    truck.y + truck.height > car.y) {
+                    
+                    // Create explosion at collision point
+                    createExplosion(car.x + car.width/2, car.y + car.height/2);
+                    
+                    money -= car.fine;
+                    police.splice(i, 1);
+                    
+                    // Check game over
+                    if (money < 0) {
+                        gameOver();
+                        return;
+                    }
+                }
+            }
+            
+            // Check car-to-car collisions
+            for (let i = 0; i < police.length; i++) {
+                for (let j = i + 1; j < police.length; j++) {
+                    const car1 = police[i];
+                    const car2 = police[j];
+                    
+                    if (car1.x < car2.x + car2.width &&
+                        car1.x + car1.width > car2.x &&
+                        car1.y < car2.y + car2.height &&
+                        car1.y + car1.height > car2.y) {
+                        
+                        // Create explosion at collision point
+                        const explosionX = (car1.x + car2.x) / 2 + 15;
+                        const explosionY = (car1.y + car2.y) / 2 + 10;
+                        createExplosion(explosionX, explosionY);
+                        
+                        // Remove both cars
+                        police.splice(j, 1);
+                        police.splice(i, 1);
+                        
+                        // Bonus money for causing crashes!
+                        money += 100;
+                        
+                        // Check for level up
+                        updateLevel();
+                        
+                        break;
+                    }
+                }
+            }
+            
+            // Check car collisions with obstacles
+            for (let i = police.length - 1; i >= 0; i--) {
+                const car = police[i];
+                obstacles.forEach(obstacle => {
+                    if (car.x < obstacle.x + obstacle.width &&
+                        car.x + car.width > obstacle.x &&
+                        car.y < obstacle.y + obstacle.height &&
+                        car.y + car.height > obstacle.y) {
+                        
+                        // Create explosion
+                        createExplosion(car.x + car.width/2, car.y + car.height/2);
+                        
+                        // Remove car and give bonus
+                        police.splice(i, 1);
+                        money += 50;
+                        
+                        // Check for level up
+                        updateLevel();
+                    }
+                });
+            }
+        }
+        
+        // Draw truck
+        function drawTruck() {
+            ctx.font = '35px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('🚚', truck.x + truck.width/2, truck.y + truck.height/2 + 12);
+        }
+        
+        // Draw loads
+        function drawLoads() {
+            loads.forEach(load => {
+                ctx.font = '25px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('😊', load.x + load.width/2, load.y + load.height/2 + 8);
+                
+                // Value text below
+                ctx.fillStyle = '#f39c12';
+                ctx.font = 'bold 12px Arial';
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 2;
+                ctx.strokeText(`${load.value}`, load.x + load.width/2, load.y + load.height + 15);
+                ctx.fillText(`${load.value}`, load.x + load.width/2, load.y + load.height + 15);
+            });
+        }
+        
+        // Draw police cars
+        function drawPoliceCars() {
+            police.forEach(car => {
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('🚗', car.x + car.width/2, car.y + car.height/2 + 10);
+                
+                // Fine text above
+                ctx.fillStyle = '#e74c3c';
+                ctx.font = 'bold 12px Arial';
+                ctx.strokeStyle = 'white';
+                ctx.lineWidth = 2;
+                ctx.strokeText(`-${car.fine}`, car.x + car.width/2, car.y - 5);
+                ctx.fillText(`-${car.fine}`, car.x + car.width/2, car.y - 5);
+            });
+        }
+        
+        // Game loop
+        function gameLoop(timestamp) {
+            if (!gameRunning) return;
+            
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            
+            // Update timers
+            loadSpawnTimer += deltaTime;
+            policeSpawnTimer += deltaTime;
+            gameTimer += deltaTime;
+            
+            // Update game time display
+            gameTime = Math.floor(gameTimer / 1000);
+            
+            // Spawn loads
+            if (loadSpawnTimer > 2000) {
+                spawnLoad();
+                loadSpawnTimer = 0;
+            }
+            
+            // Spawn police after 15 seconds
+            if (gameTime >= 15 && !policeSpawned) {
+                document.getElementById('policeWarning').style.display = 'block';
+                policeSpawned = true;
+            }
+            
+            if (policeSpawned && policeSpawnTimer > 3000) {
+                spawnPoliceCar();
+                policeSpawnTimer = 0;
+            }
+            
+            // Update game objects
+            updateTruck();
+            updatePoliceCars();
+            updateExplosions();
+            checkCollisions();
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw everything
+            drawTruck();
+            drawLoads();
+            drawObstacles();
+            drawPoliceCars();
+            drawExplosions();
+            
+            // Update UI
+            document.getElementById('money').textContent = money;
+            document.getElementById('loads').textContent = loadsCollected;
+            document.getElementById('time').textContent = gameTime;
+            document.getElementById('level').textContent = currentLevel;
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Game over
+        function gameOver() {
+            gameRunning = false;
+            document.getElementById('finalMoney').textContent = money;
+            document.getElementById('finalLevel').textContent = currentLevel;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+        
+        // Restart game
+        function restartGame() {
+            gameRunning = true;
+            money = 0;
+            loadsCollected = 0;
+            gameTime = 0;
+            policeSpawned = false;
+            currentLevel = 1;
+            
+            truck.x = 50;
+            truck.y = 200;
+            truck.speed = baseSpeed;
+            
+            loads.length = 0;
+            police.length = 0;
+            explosions.length = 0;
+            obstacles.length = 0;
+            
+            loadSpawnTimer = 0;
+            policeSpawnTimer = 0;
+            gameTimer = 0;
+            
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('levelUp').style.display = 'none';
+            document.getElementById('policeWarning').style.display = 'none';
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Initialize game
+        spawnLoad();
+        spawnLoad();
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
