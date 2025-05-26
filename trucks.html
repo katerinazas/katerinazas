@@ -19,14 +19,21 @@
             align-items: center;
             min-height: 100vh;
             color: white;
+            padding: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
         }
 
         .game-container {
             text-align: center;
             background: rgba(0, 0, 0, 0.8);
-            padding: 20px;
+            padding: 15px;
             border-radius: 15px;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            max-width: 95vw;
+            max-height: 95vh;
+            overflow: hidden;
         }
 
         .game-header {
@@ -34,7 +41,7 @@
         }
 
         .game-header h1 {
-            font-size: 2.5em;
+            font-size: clamp(1.5em, 4vw, 2.5em);
             color: #f39c12;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
             margin-bottom: 10px;
@@ -43,17 +50,18 @@
         .stats {
             display: flex;
             justify-content: space-around;
-            margin-bottom: 20px;
-            font-size: 1.1em;
+            margin-bottom: 15px;
+            font-size: clamp(0.8em, 2.5vw, 1.1em);
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 5px;
         }
 
         .stat {
             background: rgba(52, 152, 219, 0.3);
-            padding: 10px 20px;
-            border-radius: 25px;
+            padding: 8px 12px;
+            border-radius: 20px;
             border: 2px solid #3498db;
+            min-width: 80px;
         }
 
         #gameCanvas {
@@ -61,12 +69,119 @@
             border-radius: 10px;
             background: linear-gradient(45deg, #27ae60, #2ecc71);
             box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+            height: auto;
+            touch-action: none;
         }
 
         .controls {
-            margin-top: 20px;
-            font-size: 1.1em;
+            margin-top: 15px;
+            font-size: clamp(0.9em, 2.5vw, 1.1em);
             color: #bdc3c7;
+        }
+
+        .touch-controls {
+            display: none;
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: 15px auto;
+        }
+
+        .control-btn {
+            background: rgba(52, 152, 219, 0.8);
+            border: 3px solid #3498db;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            cursor: pointer;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+            transition: all 0.1s ease;
+            position: absolute;
+        }
+
+        .control-btn:active {
+            background: rgba(52, 152, 219, 1);
+        }
+
+        .control-btn.up { 
+            top: 10px; 
+            left: 50%; 
+            transform: translateX(-50%);
+        }
+        
+        .control-btn.up:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        .control-btn.left { 
+            top: 50%; 
+            left: 10px; 
+            transform: translateY(-50%);
+        }
+        
+        .control-btn.left:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        .control-btn.right { 
+            top: 50%; 
+            right: 10px; 
+            transform: translateY(-50%);
+        }
+        
+        .control-btn.right:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+        
+        .control-btn.down { 
+            bottom: 10px; 
+            left: 50%; 
+            transform: translateX(-50%);
+        }
+        
+        .control-btn.down:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        @media (max-width: 768px) {
+            .touch-controls {
+                display: grid;
+            }
+            
+            .controls {
+                margin-top: 10px;
+            }
+            
+            .game-container {
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                font-size: 0.9em;
+                gap: 3px;
+            }
+            
+            .stat {
+                padding: 6px 8px;
+                min-width: 70px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 20px;
+            }
         }
 
         .game-over {
@@ -154,7 +269,15 @@
         <canvas id="gameCanvas" width="600" height="400"></canvas>
         
         <div class="controls">
-            Use ARROW KEYS or WASD to move your truck
+            <div class="touch-controls" id="touchControls">
+                <div class="control-btn up" data-direction="up">⬆️</div>
+                <div class="control-btn left" data-direction="left">⬅️</div>
+                <div class="control-btn right" data-direction="right">➡️</div>
+                <div class="control-btn down" data-direction="down">⬇️</div>
+            </div>
+            <div id="controlText">
+                Use ARROW KEYS or WASD to move your truck
+            </div>
             <div id="policeWarning" class="warning" style="display: none;">
                 🚨 CARS INCOMING! Avoid them or lose money! Make them crash for bonus! 🚨
             </div>
@@ -213,14 +336,87 @@
         
         // Input handling
         const keys = {};
+        const touchInput = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        };
         
+        // Keyboard controls
         document.addEventListener('keydown', (e) => {
             keys[e.key.toLowerCase()] = true;
+            e.preventDefault();
         });
         
         document.addEventListener('keyup', (e) => {
             keys[e.key.toLowerCase()] = false;
+            e.preventDefault();
         });
+        
+        // Touch controls
+        function setupTouchControls() {
+            const touchControls = document.querySelectorAll('.control-btn');
+            
+            touchControls.forEach(btn => {
+                const direction = btn.getAttribute('data-direction');
+                
+                // Touch start
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    touchInput[direction] = true;
+                    btn.classList.add('active');
+                });
+                
+                // Touch end
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    touchInput[direction] = false;
+                    btn.classList.remove('active');
+                });
+                
+                // Mouse events for desktop testing
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    touchInput[direction] = true;
+                    btn.classList.add('active');
+                });
+                
+                btn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    touchInput[direction] = false;
+                    btn.classList.remove('active');
+                });
+                
+                btn.addEventListener('mouseleave', (e) => {
+                    touchInput[direction] = false;
+                    btn.classList.remove('active');
+                });
+            });
+        }
+        
+        // Detect mobile device
+        function isMobile() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (navigator.maxTouchPoints && navigator.maxTouchPoints > 2);
+        }
+        
+        // Setup responsive canvas
+        function setupCanvas() {
+            const canvas = document.getElementById('gameCanvas');
+            const container = document.querySelector('.game-container');
+            
+            if (isMobile()) {
+                document.getElementById('controlText').style.display = 'none';
+                
+                // Adjust canvas size for mobile
+                const maxWidth = Math.min(window.innerWidth - 40, 600);
+                const maxHeight = Math.min(window.innerHeight * 0.4, 400);
+                
+                canvas.style.width = maxWidth + 'px';
+                canvas.style.height = (maxWidth * 400 / 600) + 'px';
+            }
+        }
         
         // Spawn load
         function spawnLoad() {
@@ -308,10 +504,17 @@
             truck.dx = 0;
             truck.dy = 0;
             
+            // Keyboard input
             if (keys['arrowleft'] || keys['a']) truck.dx = -truck.speed;
             if (keys['arrowright'] || keys['d']) truck.dx = truck.speed;
             if (keys['arrowup'] || keys['w']) truck.dy = -truck.speed;
             if (keys['arrowdown'] || keys['s']) truck.dy = truck.speed;
+            
+            // Touch input
+            if (touchInput.left) truck.dx = -truck.speed;
+            if (touchInput.right) truck.dx = truck.speed;
+            if (touchInput.up) truck.dy = -truck.speed;
+            if (touchInput.down) truck.dy = truck.speed;
             
             truck.x += truck.dx;
             truck.y += truck.dy;
@@ -662,6 +865,8 @@
         }
         
         // Initialize game
+        setupCanvas();
+        setupTouchControls();
         spawnLoad();
         spawnLoad();
         requestAnimationFrame(gameLoop);
