@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truck Load Runner</title>
+    <title>Truck Runner</title>
     <style>
         * {
             margin: 0;
@@ -227,6 +227,25 @@
             animation: pulse 2s infinite;
         }
 
+        .game-win {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(46, 204, 113, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            display: none;
+            z-index: 100;
+            color: white;
+        }
+
+        .game-win h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            color: #f1c40f;
+        }
         .level-up {
             position: absolute;
             top: 20%;
@@ -257,7 +276,7 @@
 <body>
     <div class="game-container">
         <div class="game-header">
-            <h1>🚛 Truck Load Runner</h1>
+            <h1>🚛 Truck Runner</h1>
             <div class="stats">
                 <div class="stat">💰 Money: $<span id="money">0</span></div>
                 <div class="stat">📦 Loads: <span id="loads">0</span></div>
@@ -295,6 +314,14 @@
             <h2>🎉 LEVEL UP! 🎉</h2>
             <p>Level <span id="newLevel">2</span></p>
             <p>Speed increased! More obstacles!</p>
+        </div>
+
+        <div id="gameWin" class="game-win">
+            <h2>🎉 YOU WIN! 🎉</h2>
+            <p>Congratulations!</p>
+            <p>You've mastered all 5 levels!</p>
+            <p>Final Score: $<span id="winMoney">0</span></p>
+            <button class="restart-btn" onclick="restartGame()">Play Again</button>
         </div>
     </div>
 
@@ -442,9 +469,19 @@
         
         // Update level based on money
         function updateLevel() {
-            const newLevel = Math.floor(money / 1000) + 1;
+            const newLevel = Math.min(Math.floor(money / 1000) + 1, 5); // Cap at level 5
             if (newLevel > currentLevel) {
                 currentLevel = newLevel;
+                
+                // Check for win condition
+                if (currentLevel === 5) {
+                    // Show level up first, then win after delay
+                    showLevelUp();
+                    setTimeout(() => {
+                        gameWin();
+                    }, 2500);
+                    return;
+                }
                 
                 // Increase speeds
                 const speedMultiplier = 1 + (currentLevel - 1) * 0.3;
@@ -459,7 +496,7 @@
                 showLevelUp();
                 
                 // Add more obstacles for higher levels
-                const obstaclesToAdd = Math.min(currentLevel - 1, 8); // Max 8 obstacles
+                const obstaclesToAdd = Math.min(currentLevel - 1, 4); // Max 4 obstacles for level 5
                 for (let i = 0; i < obstaclesToAdd; i++) {
                     spawnObstacle();
                 }
@@ -827,6 +864,13 @@
             requestAnimationFrame(gameLoop);
         }
         
+        // Game win
+        function gameWin() {
+            gameRunning = false;
+            document.getElementById('winMoney').textContent = money;
+            document.getElementById('gameWin').style.display = 'block';
+        }
+        
         // Game over
         function gameOver() {
             gameRunning = false;
@@ -858,6 +902,7 @@
             gameTimer = 0;
             
             document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('gameWin').style.display = 'none';
             document.getElementById('levelUp').style.display = 'none';
             document.getElementById('policeWarning').style.display = 'none';
             
