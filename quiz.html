@@ -1,294 +1,584 @@
-import React, { useState } from 'react';
-
-const MicroeconomicsJeopardy = () => {
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
-  const [score, setScore] = useState(0);
-
-  const categories = {
-    "SUPPLY & DEMAND": {
-      100: { 
-        question: "This happens to price when demand increases and supply stays the same", 
-        options: ["Price increases", "Price decreases", "Price stays the same", "Price becomes unpredictable"],
-        correct: 0
-      },
-      200: { 
-        question: "The point where supply and demand curves intersect", 
-        options: ["Equilibrium", "Maximum", "Minimum", "Break-even"],
-        correct: 0
-      },
-      300: { 
-        question: "When quantity demanded exceeds quantity supplied", 
-        options: ["Shortage", "Surplus", "Equilibrium", "Monopoly"],
-        correct: 0
-      },
-      400: { 
-        question: "A good whose demand increases when income increases", 
-        options: ["Normal good", "Inferior good", "Luxury good", "Substitute good"],
-        correct: 0
-      },
-      500: { 
-        question: "The responsiveness of quantity demanded to a change in price", 
-        options: ["Price elasticity of demand", "Income elasticity", "Cross elasticity", "Supply elasticity"],
-        correct: 0
-      }
-    },
-    "MARKET STRUCTURES": {
-      100: { 
-        question: "A market with only one seller", 
-        options: ["Monopoly", "Oligopoly", "Perfect competition", "Monopolistic competition"],
-        correct: 0
-      },
-      200: { 
-        question: "A market with many sellers offering identical products", 
-        options: ["Perfect competition", "Monopoly", "Oligopoly", "Duopoly"],
-        correct: 0
-      },
-      300: { 
-        question: "A market with a few large firms dominating", 
-        options: ["Oligopoly", "Monopoly", "Perfect competition", "Monopolistic competition"],
-        correct: 0
-      },
-      400: { 
-        question: "Competition based on product differentiation rather than price", 
-        options: ["Monopolistic competition", "Perfect competition", "Oligopoly", "Monopoly"],
-        correct: 0
-      },
-      500: { 
-        question: "Legal barriers that prevent other firms from entering a market", 
-        options: ["Barriers to entry", "Market forces", "Price controls", "Supply restrictions"],
-        correct: 0
-      }
-    },
-    "COSTS": {
-      100: { 
-        question: "Costs that don't change with production level", 
-        options: ["Fixed costs", "Variable costs", "Marginal costs", "Average costs"],
-        correct: 0
-      },
-      200: { 
-        question: "The additional cost of producing one more unit", 
-        options: ["Marginal cost", "Average cost", "Fixed cost", "Total cost"],
-        correct: 0
-      },
-      300: { 
-        question: "Total cost divided by quantity produced", 
-        options: ["Average cost", "Marginal cost", "Fixed cost", "Variable cost"],
-        correct: 0
-      },
-      400: { 
-        question: "The value of the next best alternative given up", 
-        options: ["Opportunity cost", "Sunk cost", "Marginal cost", "Fixed cost"],
-        correct: 0
-      },
-      500: { 
-        question: "Costs that increase proportionally with production", 
-        options: ["Variable costs", "Fixed costs", "Sunk costs", "Average costs"],
-        correct: 0
-      }
-    },
-    "CONSUMER THEORY": {
-      100: { 
-        question: "The satisfaction gained from consuming a good", 
-        options: ["Utility", "Profit", "Revenue", "Benefit"],
-        correct: 0
-      },
-      200: { 
-        question: "Additional satisfaction from consuming one more unit", 
-        options: ["Marginal utility", "Total utility", "Average utility", "Maximum utility"],
-        correct: 0
-      },
-      300: { 
-        question: "A graph showing combinations of goods that give equal satisfaction", 
-        options: ["Indifference curve", "Demand curve", "Supply curve", "Cost curve"],
-        correct: 0
-      },
-      400: { 
-        question: "The rate at which a consumer will trade one good for another", 
-        options: ["Marginal rate of substitution", "Price ratio", "Income ratio", "Utility ratio"],
-        correct: 0
-      },
-      500: { 
-        question: "The constraint that limits consumer choices based on income and prices", 
-        options: ["Budget constraint", "Income constraint", "Price constraint", "Utility constraint"],
-        correct: 0
-      }
-    },
-    "EXTERNALITIES": {
-      100: { 
-        question: "Costs or benefits that affect third parties not involved in a transaction", 
-        options: ["Externalities", "Internalities", "Market forces", "Price effects"],
-        correct: 0
-      },
-      200: { 
-        question: "When the social cost exceeds the private cost", 
-        options: ["Negative externality", "Positive externality", "Market failure", "Price distortion"],
-        correct: 0
-      },
-      300: { 
-        question: "A tax designed to correct negative externalities", 
-        options: ["Pigouvian tax", "Income tax", "Sales tax", "Property tax"],
-        correct: 0
-      },
-      400: { 
-        question: "When the social benefit exceeds the private benefit", 
-        options: ["Positive externality", "Negative externality", "Market surplus", "Consumer surplus"],
-        correct: 0
-      },
-      500: { 
-        question: "Goods that are non-excludable and non-rivalrous", 
-        options: ["Public goods", "Private goods", "Common goods", "Club goods"],
-        correct: 0
-      }
-    }
-  };
-
-  const handleQuestionClick = (category, value) => {
-    const questionKey = `${category}-${value}`;
-    if (answeredQuestions.has(questionKey)) return;
-    
-    setSelectedQuestion({ category, value, ...categories[category][value] });
-    setShowAnswer(false);
-  };
-
-  const handleAnswer = (selectedIndex) => {
-    const isCorrect = selectedIndex === selectedQuestion.correct;
-    if (isCorrect) {
-      setScore(score + selectedQuestion.value);
-    }
-    const questionKey = `${selectedQuestion.category}-${selectedQuestion.value}`;
-    setAnsweredQuestions(new Set([...answeredQuestions, questionKey]));
-    setShowAnswer(true);
-    
-    // Auto-close after showing result
-    setTimeout(() => {
-      setSelectedQuestion(null);
-      setShowAnswer(false);
-    }, 2000);
-  };
-
-  const resetGame = () => {
-    setAnsweredQuestions(new Set());
-    setScore(0);
-    setSelectedQuestion(null);
-    setShowAnswer(false);
-  };
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-700 p-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-yellow-300 mb-4 tracking-wider" 
-              style={{fontFamily: 'serif', textShadow: '3px 3px 0px #1e40af'}}>
-            MICROECONOMICS!
-          </h1>
-          <div className="text-2xl text-white font-semibold">
-            Score: ${score.toLocaleString()}
-          </div>
-        </div>
-
-        {/* Game Board */}
-        {!selectedQuestion && (
-          <div className="grid grid-cols-5 gap-2 mb-8">
-            {Object.keys(categories).map(category => (
-              <div key={category} className="flex flex-col">
-                {/* Category Header */}
-                <div className="bg-blue-600 text-white text-center py-4 px-2 font-bold text-sm h-20 flex items-center justify-center border-2 border-yellow-300">
-                  {category}
-                </div>
-                {/* Question Values */}
-                {[100, 200, 300, 400, 500].map(value => {
-                  const questionKey = `${category}-${value}`;
-                  const isAnswered = answeredQuestions.has(questionKey);
-                  return (
-                    <button
-                      key={value}
-                      onClick={() => handleQuestionClick(category, value)}
-                      disabled={isAnswered}
-                      className={`h-20 px-4 text-2xl font-bold border-2 border-yellow-300 transition-all flex items-center justify-center
-                        ${isAnswered 
-                          ? 'bg-blue-900 text-blue-700 cursor-not-allowed' 
-                          : 'bg-blue-500 text-yellow-300 hover:bg-blue-400 hover:scale-105 cursor-pointer'
-                        }`}
-                    >
-                      {isAnswered ? '' : `${value}`}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Question Display */}
-        {selectedQuestion && (
-          <div className="bg-blue-600 border-4 border-yellow-300 p-8 rounded-lg text-center">
-            <div className="text-yellow-300 text-sm font-semibold mb-4">
-              {selectedQuestion.category} - ${selectedQuestion.value}
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microeconomics Jeopardy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #1e3a8a, #1e40af);
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 20px;
+            letter-spacing: 0.1em;
+            font-family: serif;
+            text-shadow: 3px 3px 0px #1e40af;
+        }
+        
+        .score {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 40px;
+        }
+        
+        .category-column {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .category-header {
+            background-color: #2563eb;
+            color: white;
+            text-align: center;
+            padding: 16px 8px;
+            font-weight: bold;
+            font-size: 14px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #fbbf24;
+        }
+        
+        .question-cell {
+            height: 80px;
+            padding: 16px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: 2px solid #fbbf24;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .question-cell:not(.answered) {
+            background-color: #3b82f6;
+            color: #fbbf24;
+        }
+        
+        .question-cell:not(.answered):hover {
+            background-color: #60a5fa;
+            transform: scale(1.05);
+        }
+        
+        .question-cell.answered {
+            background-color: #1e3a8a;
+            color: #374151;
+            cursor: not-allowed;
+        }
+        
+        .question-display {
+            background-color: #2563eb;
+            border: 4px solid #fbbf24;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        
+        .question-display.show {
+            display: block;
+        }
+        
+        .question-header {
+            color: #fbbf24;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .question-text {
+            color: white;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 40px;
+            line-height: 1.4;
+        }
+        
+        .answer-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .answer-button {
+            background-color: #fbbf24;
+            color: #1e40af;
+            padding: 16px 24px;
+            font-size: 1.125rem;
+            font-weight: 600;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .answer-button:hover {
+            background-color: #f59e0b;
+        }
+        
+        .result-display {
+            display: none;
+        }
+        
+        .result-display.show {
+            display: block;
+        }
+        
+        .correct-answer {
+            color: #fbbf24;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        
+        .result-message {
+            font-size: 1.125rem;
+            color: white;
+        }
+        
+        .controls {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .new-game-button {
+            background-color: #fbbf24;
+            color: #1e40af;
+            padding: 12px 24px;
+            font-size: 1.125rem;
+            font-weight: bold;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .new-game-button:hover {
+            background-color: #f59e0b;
+        }
+        
+        .game-over-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-over-modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: #2563eb;
+            border: 4px solid #fbbf24;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .modal-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #fbbf24;
+            margin-bottom: 20px;
+        }
+        
+        .modal-score {
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .play-again-button {
+            background-color: #fbbf24;
+            color: #1e40af;
+            padding: 16px 32px;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .play-again-button:hover {
+            background-color: #f59e0b;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
             
-            {!showAnswer ? (
-              <div>
-                <div className="text-white text-2xl md:text-3xl font-semibold mb-8 leading-relaxed">
-                  {selectedQuestion.question}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-                  {selectedQuestion.options.map((option, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleAnswer(index)}
-                      className="bg-yellow-300 text-blue-900 px-6 py-4 text-lg font-semibold rounded hover:bg-yellow-200 transition-colors"
-                    >
-                      {String.fromCharCode(65 + index)}. {option}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="text-yellow-300 text-2xl md:text-3xl font-semibold mb-4">
-                  Correct Answer: {selectedQuestion.options[selectedQuestion.correct]}
-                </div>
-                <div className="text-lg text-white">
-                  {selectedQuestion.options.indexOf(selectedQuestion.options[selectedQuestion.correct]) === selectedQuestion.correct
-                    ? "You got it right! 🎉" 
-                    : "Better luck next time! 📚"}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Game Controls */}
-        <div className="text-center mt-8">
-          <button
-            onClick={resetGame}
-            className="bg-yellow-300 text-blue-900 px-6 py-3 text-lg font-bold rounded hover:bg-yellow-200 transition-colors"
-          >
-            New Game
-          </button>
+            .question-text {
+                font-size: 1.5rem;
+            }
+            
+            .answer-options {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-header {
+                font-size: 12px;
+                padding: 12px 4px;
+            }
+            
+            .question-cell {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">MICROECONOMICS!</h1>
+            <div class="score">Score: $<span id="score">0</span></div>
         </div>
 
-        {/* Game Over */}
-        {answeredQuestions.size === 25 && (
-          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center">
-            <div className="bg-blue-600 border-4 border-yellow-300 p-8 rounded-lg text-center">
-              <h2 className="text-4xl font-bold text-yellow-300 mb-4">Game Complete!</h2>
-              <p className="text-2xl text-white mb-6">Final Score: ${score.toLocaleString()}</p>
-              <button
-                onClick={resetGame}
-                className="bg-yellow-300 text-blue-900 px-8 py-4 text-xl font-bold rounded hover:bg-yellow-200 transition-colors"
-              >
-                Play Again
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
+        <!-- Game Board -->
+        <div id="gameBoard" class="game-board">
+            <!-- Categories will be generated here -->
+        </div>
 
-export default MicroeconomicsJeopardy;
+        <!-- Question Display -->
+        <div id="questionDisplay" class="question-display">
+            <div id="questionHeader" class="question-header"></div>
+            <div id="questionText" class="question-text"></div>
+            <div id="answerOptions" class="answer-options"></div>
+            <div id="resultDisplay" class="result-display">
+                <div id="correctAnswer" class="correct-answer"></div>
+                <div id="resultMessage" class="result-message"></div>
+            </div>
+        </div>
+
+        <!-- Game Controls -->
+        <div class="controls">
+            <button onclick="resetGame()" class="new-game-button">New Game</button>
+        </div>
+
+        <!-- Game Over Modal -->
+        <div id="gameOverModal" class="game-over-modal">
+            <div class="modal-content">
+                <h2 class="modal-title">Game Complete!</h2>
+                <p class="modal-score">Final Score: $<span id="finalScore">0</span></p>
+                <button onclick="resetGame()" class="play-again-button">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game data
+        const categories = {
+            "SUPPLY & DEMAND": {
+                100: { 
+                    question: "This happens to price when demand increases and supply stays the same", 
+                    options: ["Price increases", "Price decreases", "Price stays the same", "Price becomes unpredictable"],
+                    correct: 0
+                },
+                200: { 
+                    question: "The point where supply and demand curves intersect", 
+                    options: ["Equilibrium", "Maximum", "Minimum", "Break-even"],
+                    correct: 0
+                },
+                300: { 
+                    question: "When quantity demanded exceeds quantity supplied", 
+                    options: ["Shortage", "Surplus", "Equilibrium", "Monopoly"],
+                    correct: 0
+                },
+                400: { 
+                    question: "A good whose demand increases when income increases", 
+                    options: ["Normal good", "Inferior good", "Luxury good", "Substitute good"],
+                    correct: 0
+                },
+                500: { 
+                    question: "The responsiveness of quantity demanded to a change in price", 
+                    options: ["Price elasticity of demand", "Income elasticity", "Cross elasticity", "Supply elasticity"],
+                    correct: 0
+                }
+            },
+            "MARKET STRUCTURES": {
+                100: { 
+                    question: "A market with only one seller", 
+                    options: ["Monopoly", "Oligopoly", "Perfect competition", "Monopolistic competition"],
+                    correct: 0
+                },
+                200: { 
+                    question: "A market with many sellers offering identical products", 
+                    options: ["Perfect competition", "Monopoly", "Oligopoly", "Duopoly"],
+                    correct: 0
+                },
+                300: { 
+                    question: "A market with a few large firms dominating", 
+                    options: ["Oligopoly", "Monopoly", "Perfect competition", "Monopolistic competition"],
+                    correct: 0
+                },
+                400: { 
+                    question: "Competition based on product differentiation rather than price", 
+                    options: ["Monopolistic competition", "Perfect competition", "Oligopoly", "Monopoly"],
+                    correct: 0
+                },
+                500: { 
+                    question: "Legal barriers that prevent other firms from entering a market", 
+                    options: ["Barriers to entry", "Market forces", "Price controls", "Supply restrictions"],
+                    correct: 0
+                }
+            },
+            "COSTS": {
+                100: { 
+                    question: "Costs that don't change with production level", 
+                    options: ["Fixed costs", "Variable costs", "Marginal costs", "Average costs"],
+                    correct: 0
+                },
+                200: { 
+                    question: "The additional cost of producing one more unit", 
+                    options: ["Marginal cost", "Average cost", "Fixed cost", "Total cost"],
+                    correct: 0
+                },
+                300: { 
+                    question: "Total cost divided by quantity produced", 
+                    options: ["Average cost", "Marginal cost", "Fixed cost", "Variable cost"],
+                    correct: 0
+                },
+                400: { 
+                    question: "The value of the next best alternative given up", 
+                    options: ["Opportunity cost", "Sunk cost", "Marginal cost", "Fixed cost"],
+                    correct: 0
+                },
+                500: { 
+                    question: "Costs that increase proportionally with production", 
+                    options: ["Variable costs", "Fixed costs", "Sunk costs", "Average costs"],
+                    correct: 0
+                }
+            },
+            "CONSUMER THEORY": {
+                100: { 
+                    question: "The satisfaction gained from consuming a good", 
+                    options: ["Utility", "Profit", "Revenue", "Benefit"],
+                    correct: 0
+                },
+                200: { 
+                    question: "Additional satisfaction from consuming one more unit", 
+                    options: ["Marginal utility", "Total utility", "Average utility", "Maximum utility"],
+                    correct: 0
+                },
+                300: { 
+                    question: "A graph showing combinations of goods that give equal satisfaction", 
+                    options: ["Indifference curve", "Demand curve", "Supply curve", "Cost curve"],
+                    correct: 0
+                },
+                400: { 
+                    question: "The rate at which a consumer will trade one good for another", 
+                    options: ["Marginal rate of substitution", "Price ratio", "Income ratio", "Utility ratio"],
+                    correct: 0
+                },
+                500: { 
+                    question: "The constraint that limits consumer choices based on income and prices", 
+                    options: ["Budget constraint", "Income constraint", "Price constraint", "Utility constraint"],
+                    correct: 0
+                }
+            },
+            "EXTERNALITIES": {
+                100: { 
+                    question: "Costs or benefits that affect third parties not involved in a transaction", 
+                    options: ["Externalities", "Internalities", "Market forces", "Price effects"],
+                    correct: 0
+                },
+                200: { 
+                    question: "When the social cost exceeds the private cost", 
+                    options: ["Negative externality", "Positive externality", "Market failure", "Price distortion"],
+                    correct: 0
+                },
+                300: { 
+                    question: "A tax designed to correct negative externalities", 
+                    options: ["Pigouvian tax", "Income tax", "Sales tax", "Property tax"],
+                    correct: 0
+                },
+                400: { 
+                    question: "When the social benefit exceeds the private benefit", 
+                    options: ["Positive externality", "Negative externality", "Market surplus", "Consumer surplus"],
+                    correct: 0
+                },
+                500: { 
+                    question: "Goods that are non-excludable and non-rivalrous", 
+                    options: ["Public goods", "Private goods", "Common goods", "Club goods"],
+                    correct: 0
+                }
+            }
+        };
+
+        // Game state
+        let score = 0;
+        let answeredQuestions = new Set();
+        let currentQuestion = null;
+
+        // Initialize game
+        function initGame() {
+            createGameBoard();
+        }
+
+        function createGameBoard() {
+            const gameBoard = document.getElementById('gameBoard');
+            gameBoard.innerHTML = '';
+            
+            Object.keys(categories).forEach(category => {
+                // Create category column
+                const categoryColumn = document.createElement('div');
+                categoryColumn.className = 'category-column';
+                
+                // Category header
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = category;
+                categoryColumn.appendChild(header);
+                
+                // Question values
+                [100, 200, 300, 400, 500].forEach(value => {
+                    const cell = document.createElement('button');
+                    const questionKey = `${category}-${value}`;
+                    const isAnswered = answeredQuestions.has(questionKey);
+                    
+                    cell.className = `question-cell ${isAnswered ? 'answered' : ''}`;
+                    cell.textContent = isAnswered ? '' : `$${value}`;
+                    cell.disabled = isAnswered;
+                    
+                    if (!isAnswered) {
+                        cell.onclick = () => showQuestion(category, value);
+                    }
+                    
+                    categoryColumn.appendChild(cell);
+                });
+                
+                gameBoard.appendChild(categoryColumn);
+            });
+        }
+
+        function showQuestion(category, value) {
+            currentQuestion = {
+                category,
+                value,
+                ...categories[category][value]
+            };
+            
+            document.getElementById('gameBoard').style.display = 'none';
+            document.getElementById('questionDisplay').classList.add('show');
+            
+            document.getElementById('questionHeader').textContent = `${category} - $${value}`;
+            document.getElementById('questionText').textContent = currentQuestion.question;
+            
+            const answerOptions = document.getElementById('answerOptions');
+            answerOptions.innerHTML = '';
+            
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'answer-button';
+                button.textContent = `${String.fromCharCode(65 + index)}. ${option}`;
+                button.onclick = () => handleAnswer(index);
+                answerOptions.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedIndex) {
+            const isCorrect = selectedIndex === currentQuestion.correct;
+            
+            if (isCorrect) {
+                score += currentQuestion.value;
+                document.getElementById('score').textContent = score.toLocaleString();
+            }
+            
+            const questionKey = `${currentQuestion.category}-${currentQuestion.value}`;
+            answeredQuestions.add(questionKey);
+            
+            // Show result
+            document.getElementById('answerOptions').style.display = 'none';
+            document.getElementById('resultDisplay').classList.add('show');
+            document.getElementById('correctAnswer').textContent = `Correct Answer: ${currentQuestion.options[currentQuestion.correct]}`;
+            document.getElementById('resultMessage').textContent = isCorrect ? "You got it right! 🎉" : "Better luck next time! 📚";
+            
+            // Auto return to board after 2 seconds
+            setTimeout(() => {
+                document.getElementById('questionDisplay').classList.remove('show');
+                document.getElementById('resultDisplay').classList.remove('show');
+                document.getElementById('answerOptions').style.display = 'grid';
+                document.getElementById('gameBoard').style.display = 'grid';
+                
+                createGameBoard();
+                
+                // Check if game is complete
+                if (answeredQuestions.size === 25) {
+                    showGameOver();
+                }
+            }, 2000);
+        }
+
+        function showGameOver() {
+            document.getElementById('finalScore').textContent = score.toLocaleString();
+            document.getElementById('gameOverModal').classList.add('show');
+        }
+
+        function resetGame() {
+            score = 0;
+            answeredQuestions = new Set();
+            currentQuestion = null;
+            
+            document.getElementById('score').textContent = '0';
+            document.getElementById('gameOverModal').classList.remove('show');
+            document.getElementById('questionDisplay').classList.remove('show');
+            document.getElementById('resultDisplay').classList.remove('show');
+            document.getElementById('answerOptions').style.display = 'grid';
+            document.getElementById('gameBoard').style.display = 'grid';
+            
+            createGameBoard();
+        }
+
+        // Start the game when page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>
